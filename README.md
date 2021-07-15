@@ -2,7 +2,7 @@
 
 <img src="Ioasys_Empresas.png" alt="app screen"  height="600"/>
 
-Aplicativo para o sistema android, que utiliza o padrão de autenticação Oauth 2.0 
+Esse app é uma ilustração funcional, que utiliza o padrão de autenticação Oauth 2.0 
 para poder acessar uma lista de empresas ficticias. 
 
 * Kotlin
