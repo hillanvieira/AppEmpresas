@@ -1,0 +1,47 @@
+package br.com.hillan.ioasysempresas.ui.fragments
+
+import android.os.Bundle
+import androidx.fragment.app.Fragment
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.navArgs
+import br.com.hillan.ioasysempresas.R
+import br.com.hillan.ioasysempresas.databinding.FragmentDetailsBinding
+import br.com.hillan.ioasysempresas.ui.MainViewModel
+import br.com.hillan.ioasysempresas.utils.ENTERPRISES_IMAGE_URL
+import com.bumptech.glide.Glide
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
+class DetailsFragment : Fragment() {
+
+    val mainViewModel: MainViewModel by activityViewModels()
+    private lateinit var binding: FragmentDetailsBinding
+    private val args: DetailsFragmentArgs by navArgs()
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        binding = FragmentDetailsBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        configureView()
+    }
+
+    private fun configureView() {
+        binding.detailToolbar.title = args.enterpriseName
+        binding.textViewDetail.text = args.enterpriseDetails
+        Glide.with(this)
+            .load("$ENTERPRISES_IMAGE_URL${args.imageUrl}")
+            .placeholder(R.drawable.logo_home)
+            .error(R.drawable.logo_home)
+            .centerCrop()
+            .into(binding.imageViewDetail)
+    }
+}

@@ -1,0 +1,3 @@
+rootProject.name = "Ioasys Empresas"
+include ':app'
+include ':custom_edittext'
