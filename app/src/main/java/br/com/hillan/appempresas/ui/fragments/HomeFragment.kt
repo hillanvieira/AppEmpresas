@@ -26,13 +26,9 @@ class HomeFragment : Fragment() {
 
     val mainViewModel: MainViewModel by activityViewModels()
     private lateinit var binding: FragmentHomeBinding
-    val listEnterprise: MutableList<Enterprise> = mutableListOf()
+    private val listEnterprise: MutableList<Enterprise> = mutableListOf()
     private lateinit var searchView: SearchView
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        mainViewModel.loadEnterprisesList()
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -46,8 +42,19 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         configureSearchView()
-        configureHomeHint()
         handleSearch()
+        configureListeners()
+
+    }
+
+    private fun configureListeners() {
+        searchView.setOnSearchClickListener {
+            binding.mainText.visibility = INVISIBLE
+        }
+        searchView.setOnCloseListener {
+            binding.mainText.visibility = VISIBLE
+            false
+        }
     }
 
     private fun handleSearch() {
@@ -59,12 +66,17 @@ class HomeFragment : Fragment() {
             override fun onQueryTextChange(newText: String?): Boolean {
                 if (newText!!.toString().isNotEmpty()) {
                     listEnterprise.clear()
-                    for (search in mainViewModel.enterprises.value!!) {
-                        if (search.enterpriseName.contains(newText, true) && newText != "") {
-                            listEnterprise.add(search)
+
+                    mainViewModel.enterprises.observe(viewLifecycleOwner) {
+                        for (search in it) {
+                            if (search.enterpriseName.contains(newText, true) && newText != "") {
+                                listEnterprise.add(search)
+                            }
+
                         }
+                        configureHomeHintVisibility(listEnterprise)
+                        configureRecyclerView(listEnterprise)
                     }
-                    configureRecyclerView(listEnterprise)
                 } else {
                     configureRecyclerView(emptyList())
                 }
@@ -73,19 +85,11 @@ class HomeFragment : Fragment() {
         })
     }
 
-    private fun configureHomeHint() {
-        if (listEnterprise.isEmpty()) {
+    private fun <T> configureHomeHintVisibility(list: List<T>) {
+        if (list.isEmpty()) {
             binding.mainText.visibility = VISIBLE
         } else {
             binding.mainText.visibility = INVISIBLE
-        }
-
-        searchView.setOnSearchClickListener {
-            binding.mainText.visibility = INVISIBLE
-        }
-        searchView.setOnCloseListener {
-            binding.mainText.visibility = VISIBLE
-            false
         }
     }
 

@@ -13,7 +13,7 @@ import br.com.hillan.appempresas.utils.ENTERPRISES_IMAGE_URL
 import com.bumptech.glide.Glide
 
 class EnterpriseListAdapter(
-    val enterprises: List<Enterprise>,
+    private val enterprises: List<Enterprise>,
     private val context: Context,
     var listener: (Enterprise) -> Unit = {}
 ) : RecyclerView.Adapter<EnterpriseListAdapter.ViewHolder>() {

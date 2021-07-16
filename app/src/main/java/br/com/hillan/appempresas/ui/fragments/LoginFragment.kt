@@ -20,18 +20,8 @@ import dagger.hilt.android.AndroidEntryPoint
 class LoginFragment : Fragment() {
 
     val mainViewModel: MainViewModel by activityViewModels()
-
     private lateinit var binding: FragmentLoginBinding
-
     private var errorShow: Boolean = false
-
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        //this observer need to be here to do not launch again when back from home fragment
-        //If we want the observer to update when it comes back, put the watcher in onCreateView and set viewLifeCycleOwner
-        setObserversInOnCreate()
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -44,7 +34,9 @@ class LoginFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         configureDefaultView()
+        setLoginObserver()
         setListeners()
+
     }
 
     private fun setListeners() {
@@ -65,27 +57,33 @@ class LoginFragment : Fragment() {
                 val password: String = binding.editTextTextPassword.text.toString()
 
                 mainViewModel.login(email, password)
+
             }
         })
     }
 
-    private fun setObserversInOnCreate() {
-        mainViewModel.tryingToLogin.observe(this, { resultGetAccess ->
+    private fun setLoginObserver() {
+        mainViewModel.tryingToLogin.observe(viewLifecycleOwner, { resultGetAccess ->
+
             when (resultGetAccess) {
                 is ResultCall.Error -> {
                     hideProgress()
                     configureErrorLogin(resultGetAccess.error)
                 }
-
                 is ResultCall.Loading -> {
                     showProgress()
                 }
-
                 is ResultCall.Success -> {
+                    mainViewModel.loadEnterprisesList()
+                    mainViewModel.setTryLoginUsed()
                     hideProgress()
                     navToHome()
                 }
+                is ResultCall.Used -> {
+                    Unit
+                }
             }
+
         })
     }
 
@@ -110,6 +108,7 @@ class LoginFragment : Fragment() {
         binding.progressBackground.visibility = View.VISIBLE
         binding.progressBar.visibility = View.VISIBLE
     }
+
     private fun hideProgress() {
         binding.progressBackground.visibility = View.GONE
         binding.progressBar.visibility = View.GONE
@@ -129,9 +128,9 @@ class LoginFragment : Fragment() {
         )
     }
 
-    private fun navToHome(){
+    private fun navToHome() {
         val directions =
-            br.com.hillan.appempresas.ui.fragments.LoginFragmentDirections.actionLoginFragmentToHomeFragment()
+            LoginFragmentDirections.actionLoginFragmentToHomeFragment()
         findNavController().navigate(directions)
     }
 

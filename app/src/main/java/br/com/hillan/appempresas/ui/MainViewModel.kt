@@ -20,15 +20,14 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
 
     @Inject
     lateinit var repository: EnterprisesRepository
-    lateinit var headersAccess: HeadersAccess
+    private lateinit var headersAccess: HeadersAccess
 
     private val _enterprises = MutableLiveData<List<Enterprise>>()
     val enterprises: LiveData<List<Enterprise>> = _enterprises
 
+
     private val _tryingToLogin = MutableLiveData<ResultCall<Auth?>>()
     val tryingToLogin: LiveData<ResultCall<Auth?>> = _tryingToLogin
-
-
 
     fun login(email: String, password: String) {
         _tryingToLogin.value = ResultCall.Loading()
@@ -53,6 +52,10 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
         )
     }
 
+    fun setTryLoginUsed(){
+        _tryingToLogin.value = ResultCall.Used()
+    }
+
     fun loadEnterprisesList(){
         repository.getEnterprises(headersAccess).enqueue(
             object : Callback<Enterprises> {
@@ -65,20 +68,4 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
             }
         )
     }
-
-//    val idInput = MutableLiveData<Long>()
-//    val issueById: LiveData<Issue> = Transformations.switchMap(idInput) { it ->
-//        issueRepository.observeIssue(it).switchMap { it ->
-//
-//            val result = MutableLiveData<Issue>()
-//            if (it.isSuccess) {
-//                result.value = it.getOrNull()
-//            } else {
-//                result.value = Issue(0L, "Error", Date(), "#Error", "", "", User(""))
-//            }
-//            result
-//        }
-//    }
-
-
 }
