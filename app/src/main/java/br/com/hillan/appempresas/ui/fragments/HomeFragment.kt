@@ -11,6 +11,7 @@ import android.widget.SearchView.OnQueryTextListener
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -20,6 +21,7 @@ import br.com.hillan.appempresas.model.Enterprise
 import br.com.hillan.appempresas.ui.MainViewModel
 import br.com.hillan.appempresas.ui.adaper.EnterpriseListAdapter
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.*
 
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
@@ -44,8 +46,7 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         configureSearchView()
         handleSearch()
-        configureListeners()
-
+        configureHomeMessageHint()
     }
 
     override fun onDestroy() {
@@ -53,14 +54,9 @@ class HomeFragment : Fragment() {
         _binding = null
     }
 
-    private fun configureListeners() {
-        searchView.setOnSearchClickListener {
+    private fun configureHomeMessageHint() {
             binding.mainText.visibility = INVISIBLE
-        }
-        searchView.setOnCloseListener {
-            binding.mainText.visibility = VISIBLE
-            false
-        }
+            //TODO()
     }
 
     private fun handleSearch() {
@@ -70,34 +66,39 @@ class HomeFragment : Fragment() {
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                if (newText!!.toString().isNotEmpty()) {
-                    listEnterprise.clear()
-
+                if (newText != null) {
                     mainViewModel.enterprises.observe(viewLifecycleOwner) {
-                        for (search in it) {
-                            if (search.enterpriseName.contains(newText, true) && newText != "") {
-                                listEnterprise.add(search)
-                            }
+                        lifecycleScope.launch {
+                            val jobUpdateListOnSearchQuery =
+                                async { updateListOnSearchQuery(it, newText) }
 
+                            jobUpdateListOnSearchQuery.await()
+                            configureRecyclerView(listEnterprise)
                         }
-                        configureHomeHintVisibility(listEnterprise)
-                        configureRecyclerView(listEnterprise)
                     }
-                } else {
-                    configureRecyclerView(emptyList())
                 }
+
                 return false
             }
         })
     }
 
-    private fun <T> configureHomeHintVisibility(list: List<T>) {
-        if (list.isEmpty()) {
-            binding.mainText.visibility = VISIBLE
-        } else {
-            binding.mainText.visibility = INVISIBLE
+    private suspend fun updateListOnSearchQuery(list: List<Enterprise>, query: String): Job =
+        lifecycleScope.launch(Dispatchers.Default) {
+            listEnterprise.clear()
+
+            for (search in list) {
+                if (search.enterpriseName.contains(
+                        query,
+                        true
+                    ) && query != ""
+                ) {
+                    listEnterprise.add(search)
+                }
+            }
+            return@launch
         }
-    }
+
 
     private fun configureSearchView() {
         val searchItem = binding.searchToolbar.menu.findItem(R.id.app_bar_search)
@@ -131,11 +132,13 @@ class HomeFragment : Fragment() {
         {
             navToDetails(it)
         }
+
+
     }
 
     private fun navToDetails(enterprise: Enterprise) {
         findNavController().navigate(
-            br.com.hillan.appempresas.ui.fragments.HomeFragmentDirections.actionHomeFragmentToDetailsFragment(
+            HomeFragmentDirections.actionHomeFragmentToDetailsFragment(
                 enterprise.enterpriseName,
                 enterprise.description,
                 enterprise.photo
