@@ -18,20 +18,27 @@ import dagger.hilt.android.AndroidEntryPoint
 class DetailsFragment : Fragment() {
 
     val mainViewModel: MainViewModel by activityViewModels()
-    private lateinit var binding: FragmentDetailsBinding
+    private var _binding: FragmentDetailsBinding? = null
+    private val binding get() = _binding!!
+
     private val args: br.com.hillan.appempresas.ui.fragments.DetailsFragmentArgs by navArgs()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        binding = FragmentDetailsBinding.inflate(inflater, container, false)
+    ): View? {
+        _binding = FragmentDetailsBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         configureView()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        _binding = null
     }
 
     private fun configureView() {
